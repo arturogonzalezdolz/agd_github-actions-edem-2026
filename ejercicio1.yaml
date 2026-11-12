@@ -1,0 +1,24 @@
+##1. Variables de Entorno Globales: Crea un workflow quedefina una variable de entorno a nivel de workflow y la use en dos jobs distintos.
+
+name: Welcome to the party (outputs) 
+on:
+  workflow_dispatch: 
+env:
+  GLOBAL_USER: "Arturo"
+jobs:
+ say_hello:
+  name:	"Let's greet the user!" 
+  runs-on: ubuntu-latest  
+  steps:
+    - id: get-time
+      name: Grab the current time 
+      run: |
+        curTime=$(date)
+        echo "currenttime=${curTime}" >> $GITHUB_OUTPUT
+    - run: echo "The time from the early step is
+        ${{ steps.get-time.outputs.currenttime }}"
+  
+ say_bye:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "El usuario en Job 1 es $GLOBAL_USER"
