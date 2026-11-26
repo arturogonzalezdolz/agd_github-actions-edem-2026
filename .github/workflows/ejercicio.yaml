@@ -23,12 +23,34 @@ jobs:
       - name: Descargar el repositorio
         uses: actions/checkout@v4
 
+      - name: Localizar ventas.json
+        id: archivos
+        run: |
+          ventas=$(find . -type f -name 'ventas.json' -not -path './.git/*' -print -quit)
+
+          if [ -z "$ventas" ]; then
+            echo "Error: no se encontró ventas.json en el repositorio."
+            exit 1
+          fi
+
+          echo "ventas=$ventas" >> "$GITHUB_OUTPUT"
+
       - name: Validar ventas.json
-        run: python3 -m json.tool ventas.json > /dev/null
+        env:
+          VENTAS_FILE: ${{ steps.archivos.outputs.ventas }}
+        run: python3 -m json.tool "$VENTAS_FILE" > /dev/null
 
       - name: Buscar posibles claves API
         if: ${{ inputs.tests_seguridad == 'sí' }}
-        run: python3 seguridad.py
+        env:
+          VENTAS_FILE: ${{ steps.archivos.outputs.ventas }}
+        run: |
+          seguridad=$(find . -type f -name 'seguridad.py' -not -path './.git/*' -print -quit)
+          if [ -z "$seguridad" ]; then
+            echo "Error: no se encontró seguridad.py en el repositorio."
+            exit 1
+          fi
+          python3 "$seguridad" "$VENTAS_FILE"
 
   procesamiento:
     name: Procesamiento (${{ matrix.entorno }})
